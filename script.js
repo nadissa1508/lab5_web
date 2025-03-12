@@ -12,7 +12,7 @@ function searchBar(){
     header.style.justifyContent = "center";
     header.style.border = "solid black 2px";
     header.style.height = "60px";
-    header.style.padding = "10px";
+    header.style.padding = "10px";  
 
     //crear label barra de busqueda
     let labelSearchBar = document.createElement("label");
@@ -44,6 +44,18 @@ function createCardPost(){
 //Función para crear el div contenedor post (contiene todos los posts)
 
 function createPostContainer(){
+
+    let postContainer = document.createElement("div");
+    postContainer.style.display = "flex";
+    postContainer.style.alignItems = "center";
+    postContainer.style.justifyContent = "center";
+    postContainer.style.border = "solid black 2px";
+    postContainer.style.height = "100%";
+    postContainer.style.padding = "10px"; 
+
+    createCardPost();
+    
+    document.body.appendChild(postContainer);
 
 }
 
