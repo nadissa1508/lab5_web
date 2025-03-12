@@ -37,8 +37,26 @@ function searchBar(){
 
 //Función para crear un card post -> utilizar for
 
-function createCardPost(){
+function createCardPost(totalElements, container){
+    container.innerHTML = '';
 
+    let total = document.createDocumentFragment();
+
+    for(let i = 0; i < totalElements; i++){
+        let card = document.createElement("div");
+        card.id = 'card' + i;
+        card.style.border = '1px solid black';
+        card.style.borderRadius = '20px';
+        card.style.display = 'flex';
+        card.style.width = '85%';
+        card.style.height = '350px';
+        card.style.margin = '10px 0';
+        card.innerText = 'Post ' + i;
+        card.style.backgroundColor = 'blue';
+        total.appendChild(card);
+    }
+
+    container.appendChild(total);
 }
 
 //Función para crear el div contenedor post (contiene todos los posts)
@@ -47,13 +65,13 @@ function createPostContainer(){
 
     let postContainer = document.createElement("div");
     postContainer.style.display = "flex";
+    postContainer.style.flexDirection = "column";
     postContainer.style.alignItems = "center";
     postContainer.style.justifyContent = "center";
     postContainer.style.border = "solid black 2px";
-    postContainer.style.height = "100%";
     postContainer.style.padding = "10px"; 
 
-    createCardPost();
+    createCardPost(5, postContainer);
     
     document.body.appendChild(postContainer);
 
@@ -89,6 +107,7 @@ function addComment(){
 function showComments(){
 
 }
+
 
 //empezar a llamar a mis funciones
 searchBar();
