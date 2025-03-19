@@ -1,3 +1,33 @@
+/**
+ * prompt: como puedo hacer que la barra de busqueda funcione, de forma que busque y 
+ * traiga la informacion mientras el usuario escribe, como funciona normalmente una barra de busqueda
+ * 
+ * resultado: 
+ * 
+ * Para lograr esto, necesitas hacer dos cosas:
+
+ * Escuchar cada tecla que el usuario presiona (usando el evento keyup o input).
+
+ * Evitar sobrecargar la API con demasiadas solicitudes mientras el usuario escribe. Esto se logra 
+ * usando una técnica llamada debouncing.
+ * 
+ * 
+ * let timeoutId; // Variable para almacenar el ID del timeout
+
+ * searchBarInput.addEventListener("input", () => {
+ * clearTimeout(timeoutId); // Limpiar el timeout anterior
+
+ *   // Esperar 300 ms antes de realizar la búsqueda
+ *   timeoutId = setTimeout(() => {
+ *       const searchTerm = searchBarInput.value.trim(); // Obtener el valor del input
+ *       if (searchTerm) {
+ *           fetchPosts(searchTerm); // Llamar a la API con el término de búsqueda
+ *       } else {
+ *           fetchPosts(); // Si el campo está vacío, mostrar todos los posts
+ *       }
+ *   }, 300); // Retraso de 300 ms
+ * });
+ */
 
 
 //Función para crear el header con la barra de busqueda
@@ -8,10 +38,11 @@ function searchBar(){
     let header = document.createElement("header");
     header.id = "header";
     header.style.display = "flex";
-    header.style.position = "sticky";
+    header.style.position = "fixed";
     header.style.alignItems = "center";
     header.style.justifyContent = "center";
-    header.style.height = "60px";
+    header.style.width = "100%";
+    header.style.height = "70px";
     header.style.padding = "10px";  
     header.style.backgroundColor = "#fc667f";
 
@@ -26,20 +57,30 @@ function searchBar(){
     labelSearchBar.style.padding = "25px";
 
     //crear el input
-    let searchBar = document.createElement("input");
-    searchBar.id = "searchBar";
-    searchBar.setAttribute("type", "text");
-    searchBar.setAttribute("placeholder", "Search Reddit UVG...");
-    searchBar.style.padding = "5px";
-    searchBar.style.border = 'none';
-    searchBar.style.width = "80%";
-    searchBar.style.height = "35px";
-    searchBar.style.borderRadius = '20px';
-    searchBar.style.backgroundColor = '#fef4f5';
-    searchBar.style.textIndent = "15px";
+    let searchBarInput = document.createElement("input");
+    searchBarInput.id = "searchBar";
+    searchBarInput.setAttribute("type", "text");
+    searchBarInput.setAttribute("placeholder", "Search Reddit UVG...");
+    searchBarInput.style.padding = "5px";
+    searchBarInput.style.border = 'none';
+    searchBarInput.style.width = "80%";
+    searchBarInput.style.height = "35px";
+    searchBarInput.style.borderRadius = '20px';
+    searchBarInput.style.backgroundColor = '#fef4f5';
+    searchBarInput.style.textIndent = "15px";
+
+    let timeoutId;
+
+    // La barra de busqueda escucha cuando se escribe en ella
+    searchBarInput.addEventListener("input", () => {
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => {
+            fetchPosts(searchBarInput.value.trim()); 
+        }, 200);
+    });
 
     header.appendChild(labelSearchBar);
-    header.appendChild(searchBar);
+    header.appendChild(searchBarInput);
     document.body.appendChild(header);
 
     //adicional, ver si puedo colocar un icono de lupa
@@ -56,22 +97,30 @@ function createPostContainer(){
     postContainer.style.alignItems = "center";
     postContainer.style.justifyContent = "center";
     document.body.appendChild(postContainer);
-    fetchPosts();
+    fetchPosts('');
 
 }
 
 //Función para crear un card post -> utilizar for
-function fetchPosts() {
-    fetch('https://thesimpsonsquoteapi.glitch.me/quotes?count=10')
+function fetchPosts(keyword) {
+    
+    
+    fetch('http://awita.site:3000/posts')
         .then(response => response.json())
         .then(data => {
             const postContainer = document.getElementById('postContainer');
             postContainer.innerHTML = '';
 
-            // Mezclar aleatoriamente y tomar 10 elementos
-            let dataFiltered = data.sort(() => Math.random() - 0.5).slice(0, 10);
-            
-            dataFiltered.forEach(character => {
+            // filtrar segun el titulo con la barra de busqueda
+            let filteredPosts
+
+            if(keyword){
+                filteredPosts = data.posts.filter(post => post.titulo.toLowerCase().includes(keyword.toLowerCase()) || post.descripcion.toLowerCase().includes(keyword.toLowerCase()));
+            }else{
+                filteredPosts = data.posts;
+            }
+        
+            filteredPosts.forEach(post => {
                 let cardElement = document.createElement('div');
                 //estilo de la card
                 cardElement.style.width = '85%';
@@ -82,6 +131,7 @@ function fetchPosts() {
                 cardElement.style.display = 'flex';
                 cardElement.style.flexDirection = 'row';
                 cardElement.style.alignItems = 'center';
+                cardElement.style.justifyContent = "space-around";
                 cardElement.style.boxShadow = '6px 6px 6px rgba(0, 0, 0, 0.1)';
                 cardElement.style.backgroundColor = "#fbc2c8";
 
@@ -95,34 +145,40 @@ function fetchPosts() {
 
                 //titulo
                 let title = document.createElement('h1');
-                title.textContent = character.character;
+                title.textContent = post.titulo;
                 title.style.color = '#884154';
 
                 //descripcion
                 let description = document.createElement('p');
-                description.textContent = character.quote;
+                description.textContent = post.descripcion;
 
                 //imagen
                 let image = document.createElement('img');
-                image.src = character.image;
-                image.alt = character.character;
+                image.src = post.imagen;
+                image.alt = post.titulo;
                 image.style.width = '150px';
                 image.style.padding = '30px';
                 image.style.borderRadius = '5px';
                 image.style.objectFit = 'cover';
-
+                
                 //boton para seleccionar el post
                 let button = document.createElement('button');
                 button.id = 'seeMoreButton';
                 button.textContent = 'Ver más';
                 button.style.marginTop = "10px";
                 button.style.padding = "5px 10px";
-                button.style.backgroundColor = "#007bff";
+                button.style.backgroundColor = "#fc667f";
                 button.style.color = "white";
-                button.style.borderRadius = "5px";
                 button.style.cursor = "pointer";
+                button.style.width = '150px';
+                button.style.height = '50px';
+                button.style.borderRadius = "30px";
+                button.style.fontWeight = 'bold';
+                button.style.fontSize = '16px';
+                button.style.border = "none";
+            
 
-                button.addEventListener("click", () => showSelectedPost(character));
+                button.addEventListener("click", () => showSelectedPost(post));
 
                 //agregamos todo el texto a su contenedor
                 textContainer.appendChild(title);
@@ -137,7 +193,7 @@ function fetchPosts() {
                 postContainer.appendChild(cardElement);
             });
         })
-        .catch(error => console.error('Error fetching characters:', error));
+        .catch(error => console.error('Error fetching posts:', error));
 }
 
 //Funcionalidad del botón para regresar -> si redibujo será volver a dibujar la pantalla principal
@@ -191,7 +247,7 @@ function goBackButton(){
 
 
 //Función para redibujar y mostrar el post seleccionado
-function showSelectedPost(character){
+function showSelectedPost(post){
     //eliminar contenedores de la pagina
     let postContainer = document.getElementById('postContainer');
     postContainer.remove();
@@ -227,20 +283,21 @@ function showSelectedPost(character){
 
     //titulo
     let title = document.createElement('h1');
-    title.textContent = character.character;
+    title.textContent = post.titulo;
 
     //descripcion
     let description = document.createElement('p');
-    description.textContent = character.quote;
+    description.textContent = post.descripcion;
 
     //imagen
     let image = document.createElement('img');
-    image.src = character.image;
-    image.alt = character.character;
-    image.style.width = '150px';
+    image.src = post.imagen;
+    image.alt = post.titulo;
+    image.style.width = '300px';
+    image.style.height = '300px';
     image.style.padding = '30px';
     image.style.borderRadius = '5px';
-    image.style.objectFit = 'cover';
+    image.style.objectFit = 'contain';
 
     textContainer.appendChild(title);
     textContainer.appendChild(description);
@@ -254,15 +311,34 @@ function showSelectedPost(character){
     document.body.appendChild(infoPostContainer);
 
     //contenedor add comment
-    addComment();
+    addComment(post.id);
 
     //contenedor para los comentarios, aca deberia de mandar como parametro el id del post
-    showComments();
+    showComments(post.id);
+}
+
+function postComment(postId, comment){
+    fetch("http://awita.site:3000/comment", {
+        method: "POST",
+        body: JSON.stringify({
+            post_id: postId,
+            username: "Jane Doe",
+            comentario: comment
+        }),
+        
+        headers: {
+            "Content-type": "application/json; charset=UTF-8"
+        }
+    })
+    
+    .then(response => response.json())
+    .then(json => console.log(json))
+    .catch(error => console.error('Error agregando comentario:', error));
 }
 
 //Función para div de agregar comentarios
 
-function addComment(){
+function addComment(postId){
     //contenedor
     let addCommentContainer = document.createElement("div");
     addCommentContainer.id = "addCommentContainer";
@@ -282,6 +358,7 @@ function addComment(){
     input.id = "inputComment";
     input.setAttribute("type", "text");
     input.setAttribute("placeholder", "Agregar comentario...");
+    input.setAttribute("maxlength", "140");
     input.style.padding = "25px";
     input.style.width = "80%";
     input.style.border = 'none';
@@ -289,6 +366,23 @@ function addComment(){
     input.style.backgroundColor = '#fef4f5';
     input.style.textIndent = "10px";
 
+    //requisito de no permitir más de 140 caracteres
+     input.addEventListener("input", () => {
+        if (input.value.length > 140) {
+            alert("El comentario es demasiado largo!");
+            input.value = input.value.slice(0, 140); // Truncar el texto
+        }
+    });
+
+    input.addEventListener("keypress", (event) => {
+        if (event.key === "Enter") {
+            if(input.value.length > 0){
+                postComment(postId, input.value.trim());
+                showComments(postId);
+                input.value = "";
+            }
+        }
+    });
 
     //boton
     let button = document.createElement('button');
@@ -304,6 +398,17 @@ function addComment(){
     button.style.fontWeight = 'bold';
     button.style.fontSize = '16px';
     button.style.border = "none";
+
+    
+
+    button.addEventListener("click", () => {
+        if(input.value.length > 0){
+            postComment(postId, input.value.trim());
+            showComments(postId);
+            input.value = "";
+        }
+    })
+    
 
     button.addEventListener("mouseover", () => {
         button.style.backgroundColor = "#fc667f";
@@ -327,11 +432,11 @@ function addComment(){
 
 //Función para el div con la lista de comentarios -> utilizar un for para mostrarlos
 
-function showComments(id){
+function showComments(postId){
     let showCommentsContainer = document.createElement("div");
     showCommentsContainer.id = "showCommentsContainer";
     showCommentsContainer.style.width = '90%';
-    showCommentsContainer.style.height = '100%';
+    showCommentsContainer.style.height = '700px';
     showCommentsContainer.style.display = "flex";
     showCommentsContainer.style.flexDirection = "column"; 
     showCommentsContainer.style.alignItems = "center"; 
@@ -340,24 +445,23 @@ function showComments(id){
     showCommentsContainer.style.gap = "10px";
     showCommentsContainer.style.border = '3px solid #fbc2c8';
     showCommentsContainer.style.borderRadius = '30px';
+    showCommentsContainer.style.overflow = 'auto';
 
     let titleComments = document.createElement("h1");
     titleComments.textContent = "Comentarios";
     titleComments.style.color = '#884154';
-    titleComments.style.alignContent = "left";
-    titleComments.style.textAlign = "left";
-
+    titleComments.style.paddingTop = '25px';
 
     showCommentsContainer.appendChild(titleComments);
     
-    fetch('https://thesimpsonsquoteapi.glitch.me/quotes?count=5')
+    fetch(`http://awita.site:3000/comments/${postId}`)
         .then(response => response.json())
         .then(data => {
             
             // Mezclar aleatoriamente y tomar 10 elementos
-            let dataFiltered = data.sort(() => Math.random() - 0.5).slice(0, 5);
+            //dataFiltered = data.sort(() => Math.random() - 0.5).slice(0, 6);
             
-            dataFiltered.forEach(character => {
+            data.comments.forEach(commentElement => {
                 let cardElement = document.createElement('div');
                 //estilo de la card
                 cardElement.style.width = '85%';
@@ -373,13 +477,13 @@ function showComments(id){
 
                 //usuario
                 let user = document.createElement('h3');
-                user.textContent = character.character;
+                user.textContent = commentElement.username;
                 user.style.padding = '10px';
                 user.style.color = '#884154';
 
                 //comentario
                 let comment = document.createElement('p');
-                comment.textContent = character.quote;
+                comment.textContent = commentElement.comentario;
                 comment.style.padding = '10px';
 
                 //agregamos los elementos a la card
@@ -390,7 +494,7 @@ function showComments(id){
                 showCommentsContainer.appendChild(cardElement);
             });
         })
-        .catch(error => console.error('Error fetching characters:', error));
+        .catch(error => console.error('Error fetching comments:', error));
 
     document.body.appendChild(showCommentsContainer);
 }
