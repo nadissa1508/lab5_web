@@ -101,6 +101,11 @@ function createPostContainer(){
 
 }
 
+function validarURL(str) {
+    const patron = new RegExp("^(?:http(s)?:\\/\\/)?[\\w.-]+(?:\\.[\\w\\.-]+)+[\\w\\-\\._~:/?#[\\]@!\\$&'\\(\\)\\*\\+,;=.]+$"); 
+    return patron.test(str);    
+}
+
 //Función para crear un card post -> utilizar for
 function fetchPosts(keyword) {
     
@@ -112,7 +117,7 @@ function fetchPosts(keyword) {
             postContainer.innerHTML = '';
 
             // filtrar segun el titulo con la barra de busqueda
-            let filteredPosts
+            let filteredPosts;
 
             if(keyword){
                 filteredPosts = data.posts.filter(post => post.titulo.toLowerCase().includes(keyword.toLowerCase()) || post.descripcion.toLowerCase().includes(keyword.toLowerCase()));
@@ -154,7 +159,10 @@ function fetchPosts(keyword) {
 
                 //imagen
                 let image = document.createElement('img');
-                image.src = post.imagen;
+                let img = post.imagen;
+                if(validarURL(img)){
+                    image.src = img;
+                }
                 image.alt = post.titulo;
                 image.style.width = '150px';
                 image.style.padding = '30px';
@@ -237,8 +245,7 @@ function goBackButton(){
         button.style.backgroundColor = "#fbc2c8";
         button.style.color = "#884154";
     });
-
-    
+ 
     button.addEventListener("click", () => 
         showPosts()
     );
@@ -307,7 +314,6 @@ function showSelectedPost(post){
     infoPostContainer.appendChild(image);
 
     //agregar el contenedor del post al body
-
     document.body.appendChild(infoPostContainer);
 
     //contenedor add comment
@@ -322,7 +328,7 @@ function postComment(postId, comment){
         method: "POST",
         body: JSON.stringify({
             post_id: postId,
-            username: "Jane Doe",
+            username: "23764",
             comentario: comment
         }),
         
@@ -378,7 +384,7 @@ function addComment(postId){
         if (event.key === "Enter") {
             if(input.value.length > 0){
                 postComment(postId, input.value.trim());
-                showComments(postId);
+                fetchComments(postId);
                 input.value = "";
             }
         }
@@ -404,7 +410,7 @@ function addComment(postId){
     button.addEventListener("click", () => {
         if(input.value.length > 0){
             postComment(postId, input.value.trim());
-            showComments(postId);
+            fetchComments(postId);
             input.value = "";
         }
     })
@@ -430,34 +436,13 @@ function addComment(postId){
 
 }
 
-//Función para el div con la lista de comentarios -> utilizar un for para mostrarlos
-
-function showComments(postId){
-    let showCommentsContainer = document.createElement("div");
-    showCommentsContainer.id = "showCommentsContainer";
-    showCommentsContainer.style.width = '90%';
-    showCommentsContainer.style.height = '700px';
-    showCommentsContainer.style.display = "flex";
-    showCommentsContainer.style.flexDirection = "column"; 
-    showCommentsContainer.style.alignItems = "center"; 
-    showCommentsContainer.style.justifyContent = "center";
-    showCommentsContainer.style.margin = "20px auto";
-    showCommentsContainer.style.gap = "10px";
-    showCommentsContainer.style.border = '3px solid #fbc2c8';
-    showCommentsContainer.style.borderRadius = '30px';
-    showCommentsContainer.style.overflow = 'auto';
-
-    let titleComments = document.createElement("h1");
-    titleComments.textContent = "Comentarios";
-    titleComments.style.color = '#884154';
-    titleComments.style.paddingTop = '25px';
-
-    showCommentsContainer.appendChild(titleComments);
-    
+//Función fetch comments
+function fetchComments(postId){
     fetch(`http://awita.site:3000/comments/${postId}`)
         .then(response => response.json())
         .then(data => {
-            
+            const showCommentsContainer = document.getElementById('showCommentsContainer');
+            showCommentsContainer.innerHTML = '';
             // Mezclar aleatoriamente y tomar 10 elementos
             //dataFiltered = data.sort(() => Math.random() - 0.5).slice(0, 6);
             
@@ -491,11 +476,39 @@ function showComments(postId){
                 cardElement.appendChild(comment);
 
                 //agregarmos la card al contenedor
+                
                 showCommentsContainer.appendChild(cardElement);
             });
         })
         .catch(error => console.error('Error fetching comments:', error));
+}
 
+
+
+//Función para el div con la lista de comentarios -> utilizar un for para mostrarlos
+
+function showComments(postId){
+    let showCommentsContainer = document.createElement("div");
+    showCommentsContainer.id = "showCommentsContainer";
+    showCommentsContainer.style.width = '90%';
+    showCommentsContainer.style.height = '700px';
+    showCommentsContainer.style.display = "flex";
+    showCommentsContainer.style.flexDirection = "column"; 
+    showCommentsContainer.style.alignItems = "center"; 
+    showCommentsContainer.style.justifyContent = "center";
+    showCommentsContainer.style.margin = "20px auto";
+    showCommentsContainer.style.gap = "10px";
+    showCommentsContainer.style.border = '3px solid #fbc2c8';
+    showCommentsContainer.style.borderRadius = '30px';
+    showCommentsContainer.style.overflow = 'auto';
+
+    let titleComments = document.createElement("h1");
+    titleComments.textContent = "Comentarios";
+    titleComments.style.color = '#884154';
+    titleComments.style.paddingTop = '25px';
+
+    showCommentsContainer.appendChild(titleComments);
+    fetchComments(postId);
     document.body.appendChild(showCommentsContainer);
 }
 
